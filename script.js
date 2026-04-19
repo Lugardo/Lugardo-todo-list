@@ -342,6 +342,26 @@
     renderPanel();
   }
 
+  function addTasksBulk(dateKey, names, time) {
+    const cleaned = names.map((n) => (n || "").trim()).filter(Boolean);
+    if (cleaned.length === 0) return 0;
+    const tasks = getTasksForDate(dateKey).slice();
+    const now = Date.now();
+    cleaned.forEach((name, idx) => {
+      tasks.push({
+        id: `t_${now}_${idx}_${Math.random().toString(36).slice(2, 8)}`,
+        name,
+        status: "pendiente",
+        time: time || "",
+        createdAt: now + idx,
+      });
+    });
+    setTasksForDate(dateKey, tasks);
+    renderCalendar();
+    renderPanel();
+    return cleaned.length;
+  }
+
   function updateTaskStatus(dateKey, id, status) {
     const tasks = getTasksForDate(dateKey).map((t) =>
       t.id === id ? { ...t, status } : t
@@ -457,26 +477,39 @@
 
     const recognition = new SpeechRecognition();
     recognition.lang = "es-ES";
-    recognition.continuous = false;
+    recognition.continuous = true;
     recognition.interimResults = true;
     recognition.maxAlternatives = 1;
 
     let listening = false;
-    let finalTranscript = "";
+    let userStopped = false;
+    let collected = [];
 
-    function stopListening() {
-      try { recognition.stop(); } catch {}
+    function splitIntoTasks(text) {
+      return text
+        .split(/[,;.\n]+|\s+(?:luego|después|despues|siguiente(?:\s+tarea)?|otra\s+tarea|y\s+luego|y\s+después|y\s+despues|punto)\s+/i)
+        .map((s) => s.trim())
+        .filter(Boolean);
     }
 
-    function resetButton() {
-      listening = false;
-      els.micBtn.classList.remove("listening");
-      els.micBtn.querySelector(".mic-label").textContent = "Dictar";
+    function setButtonListening(on) {
+      listening = on;
+      els.micBtn.classList.toggle("listening", on);
+      els.micBtn.querySelector(".mic-label").textContent = on ? "Detener" : "Dictar";
+    }
+
+    function updateHint(interim) {
+      if (!listening) return;
+      const n = collected.length;
+      const base = `Escuchando… (${n} capturada${n === 1 ? "" : "s"})`;
+      els.micHint.classList.remove("error");
+      els.micHint.textContent = interim ? `${base} · "${interim}"` : base;
     }
 
     els.micBtn.addEventListener("click", () => {
       if (listening) {
-        stopListening();
+        userStopped = true;
+        try { recognition.stop(); } catch {}
         return;
       }
       if (!state.selectedDate) {
@@ -484,17 +517,16 @@
         els.micHint.classList.add("error");
         return;
       }
-      finalTranscript = "";
+      collected = [];
+      userStopped = false;
       els.taskInput.value = "";
-      els.micHint.textContent = "Escuchando… habla ahora.";
       els.micHint.classList.remove("error");
       try {
         recognition.start();
-        listening = true;
-        els.micBtn.classList.add("listening");
-        els.micBtn.querySelector(".mic-label").textContent = "Detener";
+        setButtonListening(true);
+        updateHint("");
       } catch {
-        resetButton();
+        setButtonListening(false);
       }
     });
 
@@ -502,45 +534,54 @@
       let interim = "";
       for (let i = event.resultIndex; i < event.results.length; i++) {
         const result = event.results[i];
+        const text = result[0].transcript;
         if (result.isFinal) {
-          finalTranscript += result[0].transcript;
+          splitIntoTasks(text).forEach((t) => collected.push(t));
         } else {
-          interim += result[0].transcript;
+          interim += text;
         }
       }
-      const combined = (finalTranscript + " " + interim).trim();
-      if (combined) {
-        els.taskInput.value = combined;
-        els.micHint.textContent = interim ? `Escuchando: "${interim.trim()}"` : "";
-      }
+      updateHint(interim.trim());
     });
 
     recognition.addEventListener("error", (event) => {
-      resetButton();
+      if (event.error === "no-speech" && !userStopped) return;
       const messages = {
-        "no-speech": "No te escuché. Intenta de nuevo.",
         "audio-capture": "No se detectó micrófono.",
         "not-allowed": "Permiso de micrófono denegado.",
         "network": "Error de red al dictar.",
+        "aborted": "",
       };
-      els.micHint.textContent = messages[event.error] || "Error al dictar.";
-      els.micHint.classList.add("error");
+      const msg = event.error in messages ? messages[event.error] : `Error al dictar (${event.error}).`;
+      if (msg) {
+        els.micHint.textContent = msg;
+        els.micHint.classList.add("error");
+      }
+      userStopped = true;
     });
 
     recognition.addEventListener("end", () => {
-      resetButton();
-      const text = (finalTranscript || els.taskInput.value).trim();
-      if (text && state.selectedDate) {
-        const time = els.taskTime.value;
-        addTask(formatDateKey(state.selectedDate), text, time);
+      if (!userStopped && listening) {
+        try {
+          recognition.start();
+          return;
+        } catch {}
+      }
+      setButtonListening(false);
+      if (state.selectedDate && collected.length > 0) {
+        const added = addTasksBulk(
+          formatDateKey(state.selectedDate),
+          collected,
+          els.taskTime.value
+        );
         els.taskInput.value = "";
         els.taskTime.value = "";
-        els.micHint.textContent = `Agregada: "${text}"`;
+        els.micHint.textContent = `${added} tarea${added === 1 ? "" : "s"} agregada${added === 1 ? "" : "s"}.`;
         els.micHint.classList.remove("error");
       } else if (!els.micHint.classList.contains("error")) {
         els.micHint.textContent = "";
       }
-      finalTranscript = "";
+      collected = [];
     });
   }
 })();
