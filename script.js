@@ -36,6 +36,8 @@
     taskForm: document.getElementById("taskForm"),
     taskInput: document.getElementById("taskInput"),
     taskTime: document.getElementById("taskTime"),
+    micBtn: document.getElementById("micBtn"),
+    micHint: document.getElementById("micHint"),
     taskList: document.getElementById("taskList"),
     emptyState: document.getElementById("emptyState"),
     moveModal: document.getElementById("moveModal"),
@@ -441,5 +443,104 @@
   els.cancelMove.addEventListener("click", closeMoveModal);
   els.confirmMove.addEventListener("click", confirmMove);
 
+  setupDictation();
   renderCalendar();
+
+  function setupDictation() {
+    const SpeechRecognition =
+      window.SpeechRecognition || window.webkitSpeechRecognition;
+
+    if (!SpeechRecognition) {
+      els.micBtn.style.display = "none";
+      return;
+    }
+
+    const recognition = new SpeechRecognition();
+    recognition.lang = "es-ES";
+    recognition.continuous = false;
+    recognition.interimResults = true;
+    recognition.maxAlternatives = 1;
+
+    let listening = false;
+    let finalTranscript = "";
+
+    function stopListening() {
+      try { recognition.stop(); } catch {}
+    }
+
+    function resetButton() {
+      listening = false;
+      els.micBtn.classList.remove("listening");
+      els.micBtn.querySelector(".mic-label").textContent = "Dictar";
+    }
+
+    els.micBtn.addEventListener("click", () => {
+      if (listening) {
+        stopListening();
+        return;
+      }
+      if (!state.selectedDate) {
+        els.micHint.textContent = "Selecciona primero un día del calendario.";
+        els.micHint.classList.add("error");
+        return;
+      }
+      finalTranscript = "";
+      els.taskInput.value = "";
+      els.micHint.textContent = "Escuchando… habla ahora.";
+      els.micHint.classList.remove("error");
+      try {
+        recognition.start();
+        listening = true;
+        els.micBtn.classList.add("listening");
+        els.micBtn.querySelector(".mic-label").textContent = "Detener";
+      } catch {
+        resetButton();
+      }
+    });
+
+    recognition.addEventListener("result", (event) => {
+      let interim = "";
+      for (let i = event.resultIndex; i < event.results.length; i++) {
+        const result = event.results[i];
+        if (result.isFinal) {
+          finalTranscript += result[0].transcript;
+        } else {
+          interim += result[0].transcript;
+        }
+      }
+      const combined = (finalTranscript + " " + interim).trim();
+      if (combined) {
+        els.taskInput.value = combined;
+        els.micHint.textContent = interim ? `Escuchando: "${interim.trim()}"` : "";
+      }
+    });
+
+    recognition.addEventListener("error", (event) => {
+      resetButton();
+      const messages = {
+        "no-speech": "No te escuché. Intenta de nuevo.",
+        "audio-capture": "No se detectó micrófono.",
+        "not-allowed": "Permiso de micrófono denegado.",
+        "network": "Error de red al dictar.",
+      };
+      els.micHint.textContent = messages[event.error] || "Error al dictar.";
+      els.micHint.classList.add("error");
+    });
+
+    recognition.addEventListener("end", () => {
+      resetButton();
+      const text = (finalTranscript || els.taskInput.value).trim();
+      if (text && state.selectedDate) {
+        const time = els.taskTime.value;
+        addTask(formatDateKey(state.selectedDate), text, time);
+        els.taskInput.value = "";
+        els.taskTime.value = "";
+        els.micHint.textContent = `Agregada: "${text}"`;
+        els.micHint.classList.remove("error");
+      } else if (!els.micHint.classList.contains("error")) {
+        els.micHint.textContent = "";
+      }
+      finalTranscript = "";
+    });
+  }
 })();

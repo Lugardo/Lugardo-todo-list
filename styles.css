@@ -340,10 +340,17 @@ button {
 }
 
 .task-form {
-  display: grid;
-  grid-template-columns: 1fr auto auto;
+  display: flex;
+  flex-direction: column;
   gap: 8px;
   margin-bottom: 16px;
+}
+
+.task-form-actions {
+  display: flex;
+  gap: 8px;
+  align-items: stretch;
+  flex-wrap: wrap;
 }
 
 .task-input,
@@ -355,6 +362,15 @@ button {
   font-family: inherit;
   background: var(--bg);
   color: var(--text);
+  min-width: 0;
+}
+
+.task-input {
+  width: 100%;
+}
+
+.task-time {
+  flex: 1 1 120px;
 }
 
 .task-input:focus,
@@ -368,14 +384,73 @@ button {
   color: var(--bg);
   border: none;
   border-radius: var(--radius-sm);
-  padding: 0 14px;
+  padding: 10px 18px;
   font-weight: 600;
   font-size: 0.9rem;
   transition: background 0.15s ease;
+  flex: 0 0 auto;
+  white-space: nowrap;
 }
 
 .add-btn:hover {
   background: var(--accent-dark);
+}
+
+.mic-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--bg);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 8px 12px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  font-family: inherit;
+  transition: all 0.15s ease;
+  flex: 0 0 auto;
+  white-space: nowrap;
+}
+
+.mic-btn:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.mic-icon {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: currentColor;
+  display: inline-block;
+}
+
+.mic-btn.listening {
+  background: var(--accent);
+  color: var(--bg);
+  border-color: var(--accent);
+  animation: mic-pulse 1.2s ease-in-out infinite;
+}
+
+.mic-btn.listening .mic-icon {
+  background: var(--bg);
+}
+
+@keyframes mic-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(225, 29, 46, 0.5); }
+  50% { box-shadow: 0 0 0 6px rgba(225, 29, 46, 0); }
+}
+
+.mic-hint {
+  margin: 0;
+  font-size: 0.8rem;
+  color: var(--muted);
+  min-height: 1em;
+}
+
+.mic-hint.error {
+  color: var(--accent);
 }
 
 .task-list {
@@ -609,14 +684,25 @@ button {
 }
 
 @media (max-width: 640px) {
-  .app-header { padding: 20px 16px 10px; }
-  .app-title { font-size: 1.5rem; }
+  .app-header { padding: 20px 12px 10px; }
+  .app-title { font-size: 1.4rem; }
+  .app-main { padding: 16px 10px 48px; }
+  .calendar-toolbar { gap: 8px; justify-content: center; }
   .month-label { font-size: 1rem; flex-basis: 100%; order: -1; }
-  .task-panel { max-width: 100%; }
-  .day-cell { min-height: 52px; padding: 4px; }
+  .task-panel { max-width: 100%; padding: 16px; }
+  .day-cell { min-height: 48px; padding: 4px; }
   .day-number { font-size: 0.8rem; }
   .weekdays > div { font-size: 0.65rem; padding: 4px 0; }
-  .task-form { grid-template-columns: 1fr; }
+  .task-form-actions { gap: 6px; }
+  .mic-btn { padding: 8px 10px; font-size: 0.8rem; }
+  .add-btn { padding: 10px 14px; }
+  .task-time { flex: 1 1 100px; }
   .dot { width: 6px; height: 6px; }
-  .legend { font-size: 0.75rem; gap: 8px 12px; }
+  .legend { font-size: 0.72rem; gap: 6px 10px; padding: 10px 6px; }
+  .day-cell .task-count { top: 2px; right: 3px; min-width: 16px; height: 16px; font-size: 0.65rem; }
+}
+
+@media (max-width: 380px) {
+  .task-form-actions { flex-direction: column; }
+  .mic-btn, .task-time, .add-btn { width: 100%; justify-content: center; }
 }

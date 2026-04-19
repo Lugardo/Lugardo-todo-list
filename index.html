@@ -66,8 +66,21 @@
         maxlength="140"
         required
       />
-      <input type="time" id="taskTime" class="task-time" aria-label="Hora (opcional)" />
-      <button type="submit" class="add-btn">Agregar</button>
+      <div class="task-form-actions">
+        <button
+          type="button"
+          id="micBtn"
+          class="mic-btn"
+          aria-label="Dictar tarea"
+          title="Dictar tarea por voz"
+        >
+          <span class="mic-icon" aria-hidden="true"></span>
+          <span class="mic-label">Dictar</span>
+        </button>
+        <input type="time" id="taskTime" class="task-time" aria-label="Hora (opcional)" />
+        <button type="submit" class="add-btn">Agregar</button>
+      </div>
+      <p id="micHint" class="mic-hint" aria-live="polite"></p>
     </form>
 
     <ul id="taskList" class="task-list"></ul>
