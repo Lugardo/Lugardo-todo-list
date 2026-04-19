@@ -998,14 +998,25 @@ button {
   .time-trigger { padding: 9px 10px; font-size: 0.9rem; }
   .time-popover {
     position: fixed;
-    top: auto;
-    bottom: 12px;
-    left: 12px;
-    right: 12px;
+    top: 50%;
+    left: 50%;
+    right: auto;
+    bottom: auto;
+    width: calc(100vw - 24px);
+    max-width: 360px;
     min-width: 0;
-    padding: 12px;
-    max-height: 70vh;
+    padding: 14px;
+    max-height: 80vh;
     overflow-y: auto;
+    transform: translate(-50%, -50%);
+  }
+  .time-popover.open {
+    animation: time-pop-mobile 0.18s ease-out;
+    box-shadow: 0 0 0 100vmax rgba(0, 0, 0, 0.35), 0 8px 32px rgba(0, 0, 0, 0.2);
+  }
+  @keyframes time-pop-mobile {
+    from { opacity: 0; transform: translate(-50%, calc(-50% + 6px)); }
+    to   { opacity: 1; transform: translate(-50%, -50%); }
   }
   .time-wheel {
     height: 128px;
