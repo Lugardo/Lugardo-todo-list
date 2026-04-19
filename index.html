@@ -3,8 +3,19 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+  <meta http-equiv="Pragma" content="no-cache" />
+  <meta http-equiv="Expires" content="0" />
   <title>Lugardo To Do List</title>
-  <link rel="stylesheet" href="styles.css" />
+  <script>
+    // Bump APP_VERSION on every release to force browsers to reload
+    // styles.css and script.js. The version is appended as a query
+    // string; the file contents are unaffected.
+    window.APP_VERSION = "2026.04.19-1";
+    document.write(
+      '<link rel="stylesheet" href="styles.css?v=' + window.APP_VERSION + '">'
+    );
+  </script>
 </head>
 <body>
   <header class="app-header">
@@ -141,6 +152,10 @@
     </div>
   </div>
 
-  <script src="script.js"></script>
+  <script>
+    document.write(
+      '<script src="script.js?v=' + window.APP_VERSION + '"><\/script>'
+    );
+  </script>
 </body>
 </html>
