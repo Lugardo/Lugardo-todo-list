@@ -64,8 +64,14 @@
         class="task-input"
         placeholder="Nueva tarea…"
         maxlength="140"
-        required
       />
+      <textarea
+        id="taskBulkInput"
+        class="task-bulk-input"
+        placeholder="Una tarea por línea&#10;Comprar pan&#10;Llamar al dentista&#10;Terminar informe"
+        rows="5"
+        hidden
+      ></textarea>
       <div class="task-form-actions">
         <button
           type="button"
@@ -107,7 +113,13 @@
         </div>
         <button type="submit" class="add-btn">Agregar</button>
       </div>
-      <p id="micHint" class="mic-hint" aria-live="polite"></p>
+      <div class="form-footer">
+        <button type="button" id="modeToggle" class="mode-toggle" aria-pressed="false">
+          <span class="mode-toggle-icon" aria-hidden="true"></span>
+          <span class="mode-toggle-label">Modo lote</span>
+        </button>
+        <p id="micHint" class="mic-hint" aria-live="polite"></p>
+      </div>
     </form>
 
     <ul id="taskList" class="task-list"></ul>

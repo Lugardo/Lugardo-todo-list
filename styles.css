@@ -659,11 +659,92 @@ button {
   50% { box-shadow: 0 0 0 6px rgba(225, 29, 46, 0); }
 }
 
+.task-bulk-input {
+  width: 100%;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 10px 12px;
+  font-size: 0.95rem;
+  font-family: inherit;
+  background: var(--bg);
+  color: var(--text);
+  resize: vertical;
+  min-height: 120px;
+  line-height: 1.45;
+}
+
+.task-bulk-input:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+.form-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.mode-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: transparent;
+  border: 1px dashed var(--border);
+  border-radius: 999px;
+  padding: 5px 12px;
+  font-size: 0.78rem;
+  font-family: inherit;
+  font-weight: 500;
+  color: var(--muted);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.mode-toggle:hover {
+  color: var(--accent);
+  border-color: var(--accent);
+  border-style: solid;
+}
+
+.mode-toggle[aria-pressed="true"] {
+  background: var(--text);
+  color: var(--bg);
+  border-color: var(--text);
+  border-style: solid;
+}
+
+.mode-toggle-icon {
+  display: inline-block;
+  width: 12px;
+  height: 8px;
+  position: relative;
+}
+
+.mode-toggle-icon::before,
+.mode-toggle-icon::after,
+.mode-toggle-icon span {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 1.5px;
+  background: currentColor;
+  border-radius: 1px;
+}
+
+.mode-toggle-icon::before { top: 0; }
+.mode-toggle-icon::after  { bottom: 0; }
+.mode-toggle-icon::before { box-shadow: 0 3.25px 0 currentColor; }
+
 .mic-hint {
   margin: 0;
   font-size: 0.8rem;
   color: var(--muted);
   min-height: 1em;
+  flex: 1;
+  text-align: right;
 }
 
 .mic-hint.error {

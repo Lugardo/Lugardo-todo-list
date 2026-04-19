@@ -35,9 +35,11 @@
     panelSummary: document.getElementById("panelSummary"),
     taskForm: document.getElementById("taskForm"),
     taskInput: document.getElementById("taskInput"),
+    taskBulkInput: document.getElementById("taskBulkInput"),
     taskTime: document.getElementById("taskTime"),
     micBtn: document.getElementById("micBtn"),
     micHint: document.getElementById("micHint"),
+    modeToggle: document.getElementById("modeToggle"),
     taskList: document.getElementById("taskList"),
     emptyState: document.getElementById("emptyState"),
     moveModal: document.getElementById("moveModal"),
@@ -201,7 +203,9 @@
     els.taskPanel.classList.add("open");
     els.taskPanel.setAttribute("aria-hidden", "false");
     els.backdrop.classList.add("visible");
-    setTimeout(() => els.taskInput.focus(), 150);
+    setTimeout(() => {
+      (bulkMode ? els.taskBulkInput : els.taskInput).focus();
+    }, 150);
   }
 
   function closePanel() {
@@ -449,13 +453,66 @@
       else if (els.taskPanel.classList.contains("open")) closePanel();
     }
   });
+  let bulkMode = false;
+
+  function parseBulkLines(text) {
+    return text
+      .split(/\r?\n/)
+      .map((l) => l.replace(/^[\s*\-•·]+/, "").trim())
+      .filter(Boolean);
+  }
+
+  function updateAddButtonLabel() {
+    const addBtn = els.taskForm.querySelector(".add-btn");
+    if (!addBtn) return;
+    if (bulkMode) {
+      const count = parseBulkLines(els.taskBulkInput.value).length;
+      addBtn.textContent = count > 0 ? `Agregar ${count}` : "Agregar";
+    } else {
+      addBtn.textContent = "Agregar";
+    }
+  }
+
+  function setBulkMode(on) {
+    bulkMode = on;
+    els.taskInput.hidden = on;
+    els.taskBulkInput.hidden = !on;
+    els.taskInput.required = !on;
+    els.modeToggle.setAttribute("aria-pressed", String(on));
+    els.modeToggle.querySelector(".mode-toggle-label").textContent = on
+      ? "Modo simple"
+      : "Modo lote";
+    updateAddButtonLabel();
+    setTimeout(() => {
+      (on ? els.taskBulkInput : els.taskInput).focus();
+    }, 50);
+  }
+
+  els.modeToggle.addEventListener("click", () => setBulkMode(!bulkMode));
+  els.taskBulkInput.addEventListener("input", updateAddButtonLabel);
+
   els.taskForm.addEventListener("submit", (e) => {
     e.preventDefault();
     if (!state.selectedDate) return;
+    const time = timePicker.getValue();
+    const dateKey = formatDateKey(state.selectedDate);
+
+    if (bulkMode) {
+      const lines = parseBulkLines(els.taskBulkInput.value);
+      if (lines.length === 0) return;
+      const added = addTasksBulk(dateKey, lines, time);
+      els.taskBulkInput.value = "";
+      timePicker.clear();
+      updateAddButtonLabel();
+      els.micHint.classList.remove("error");
+      els.micHint.textContent = `${added} tarea${added === 1 ? "" : "s"} agregada${added === 1 ? "" : "s"}.`;
+      els.taskBulkInput.focus();
+      return;
+    }
+
     const name = els.taskInput.value.trim();
     if (!name) return;
-    const time = timePicker.getValue();
-    addTask(formatDateKey(state.selectedDate), name, time);
+    addTask(dateKey, name, time);
     els.taskInput.value = "";
     timePicker.clear();
     els.taskInput.focus();
