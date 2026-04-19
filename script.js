@@ -454,17 +454,191 @@
     if (!state.selectedDate) return;
     const name = els.taskInput.value.trim();
     if (!name) return;
-    const time = els.taskTime.value;
+    const time = timePicker.getValue();
     addTask(formatDateKey(state.selectedDate), name, time);
     els.taskInput.value = "";
-    els.taskTime.value = "";
+    timePicker.clear();
     els.taskInput.focus();
   });
   els.cancelMove.addEventListener("click", closeMoveModal);
   els.confirmMove.addEventListener("click", confirmMove);
 
+  const timePicker = setupTimePicker();
   setupDictation();
   renderCalendar();
+
+  function setupTimePicker() {
+    const wrap = document.getElementById("timePicker");
+    const trigger = document.getElementById("timeTrigger");
+    const display = document.getElementById("timeDisplay");
+    const popover = document.getElementById("timePopover");
+    const hourWheel = document.getElementById("hourWheel");
+    const minuteWheel = document.getElementById("minuteWheel");
+    const clearInline = document.getElementById("timeClearInline");
+    const clearBtn = document.getElementById("timeClear");
+    const confirmBtn = document.getElementById("timeConfirm");
+    const hidden = document.getElementById("taskTime");
+    const quickBtns = popover.querySelectorAll(".time-quick button");
+
+    let hour = null;
+    let minute = null;
+
+    function pad2(n) { return String(n).padStart(2, "0"); }
+
+    for (let h = 0; h < 24; h++) {
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.textContent = pad2(h);
+      btn.dataset.hour = h;
+      btn.setAttribute("role", "option");
+      btn.addEventListener("click", () => {
+        hour = h;
+        if (minute == null) minute = 0;
+        syncSelection();
+        commit();
+      });
+      hourWheel.appendChild(btn);
+    }
+    for (let m = 0; m < 60; m += 5) {
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.textContent = pad2(m);
+      btn.dataset.minute = m;
+      btn.setAttribute("role", "option");
+      btn.addEventListener("click", () => {
+        minute = m;
+        if (hour == null) hour = new Date().getHours();
+        syncSelection();
+        commit();
+      });
+      minuteWheel.appendChild(btn);
+    }
+
+    function syncSelection() {
+      hourWheel.querySelectorAll("button").forEach((b) => {
+        b.classList.toggle("selected", Number(b.dataset.hour) === hour);
+      });
+      minuteWheel.querySelectorAll("button").forEach((b) => {
+        b.classList.toggle("selected", Number(b.dataset.minute) === minute);
+      });
+    }
+
+    function scrollToSelected(smooth = true) {
+      const prev = { h: hourWheel.style.scrollBehavior, m: minuteWheel.style.scrollBehavior };
+      if (!smooth) {
+        hourWheel.style.scrollBehavior = "auto";
+        minuteWheel.style.scrollBehavior = "auto";
+      }
+      const hSel = hourWheel.querySelector(".selected");
+      if (hSel) {
+        hourWheel.scrollTop = hSel.offsetTop - hourWheel.clientHeight / 2 + hSel.offsetHeight / 2;
+      }
+      const mSel = minuteWheel.querySelector(".selected");
+      if (mSel) {
+        minuteWheel.scrollTop = mSel.offsetTop - minuteWheel.clientHeight / 2 + mSel.offsetHeight / 2;
+      }
+      if (!smooth) {
+        hourWheel.style.scrollBehavior = prev.h;
+        minuteWheel.style.scrollBehavior = prev.m;
+      }
+    }
+
+    function commit() {
+      if (hour != null && minute != null) {
+        const value = `${pad2(hour)}:${pad2(minute)}`;
+        hidden.value = value;
+        display.textContent = value;
+        trigger.classList.remove("empty");
+        clearInline.hidden = false;
+      } else {
+        hidden.value = "";
+        display.textContent = "Sin hora";
+        trigger.classList.add("empty");
+        clearInline.hidden = true;
+      }
+    }
+
+    function open() {
+      if (hour == null || minute == null) {
+        const now = new Date();
+        hour = now.getHours();
+        minute = Math.round(now.getMinutes() / 5) * 5;
+        if (minute === 60) { minute = 0; hour = (hour + 1) % 24; }
+      }
+      syncSelection();
+      popover.classList.add("open");
+      trigger.setAttribute("aria-expanded", "true");
+      requestAnimationFrame(() => scrollToSelected(false));
+    }
+
+    function close() {
+      popover.classList.remove("open");
+      trigger.setAttribute("aria-expanded", "false");
+    }
+
+    function clearValue() {
+      hour = null;
+      minute = null;
+      syncSelection();
+      commit();
+    }
+
+    trigger.addEventListener("click", (e) => {
+      if (e.target === clearInline) return;
+      popover.classList.contains("open") ? close() : open();
+    });
+
+    clearInline.addEventListener("click", (e) => {
+      e.stopPropagation();
+      clearValue();
+    });
+
+    clearBtn.addEventListener("click", () => {
+      clearValue();
+      close();
+    });
+
+    confirmBtn.addEventListener("click", close);
+
+    quickBtns.forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const [h, m] = btn.dataset.time.split(":").map(Number);
+        hour = h;
+        minute = m;
+        syncSelection();
+        commit();
+        close();
+      });
+    });
+
+    document.addEventListener("click", (e) => {
+      if (!wrap.contains(e.target) && popover.classList.contains("open")) close();
+    });
+
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape" && popover.classList.contains("open")) {
+        close();
+        e.stopPropagation();
+      }
+    });
+
+    commit();
+
+    return {
+      getValue: () => hidden.value,
+      clear: clearValue,
+      setValue(v) {
+        if (!v) { clearValue(); return; }
+        const [h, m] = v.split(":").map(Number);
+        if (Number.isFinite(h) && Number.isFinite(m)) {
+          hour = h;
+          minute = Math.round(m / 5) * 5 % 60;
+          syncSelection();
+          commit();
+        }
+      },
+    };
+  }
 
   function setupDictation() {
     const SpeechRecognition =
@@ -572,10 +746,10 @@
         const added = addTasksBulk(
           formatDateKey(state.selectedDate),
           collected,
-          els.taskTime.value
+          timePicker.getValue()
         );
         els.taskInput.value = "";
-        els.taskTime.value = "";
+        timePicker.clear();
         els.micHint.textContent = `${added} tarea${added === 1 ? "" : "s"} agregada${added === 1 ? "" : "s"}.`;
         els.micHint.classList.remove("error");
       } else if (!els.micHint.classList.contains("error")) {

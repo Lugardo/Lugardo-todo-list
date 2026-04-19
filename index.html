@@ -77,7 +77,34 @@
           <span class="mic-icon" aria-hidden="true"></span>
           <span class="mic-label">Dictar</span>
         </button>
-        <input type="time" id="taskTime" class="task-time" aria-label="Hora (opcional)" />
+        <div class="time-picker" id="timePicker">
+          <button type="button" class="time-trigger empty" id="timeTrigger" aria-haspopup="dialog" aria-expanded="false">
+            <span class="time-icon" aria-hidden="true"></span>
+            <span class="time-display" id="timeDisplay">Sin hora</span>
+            <span class="time-clear-inline" id="timeClearInline" role="button" aria-label="Quitar hora" hidden>&times;</span>
+          </button>
+          <div class="time-popover" id="timePopover" role="dialog" aria-label="Seleccionar hora">
+            <div class="time-popover-header">Hora de la tarea</div>
+            <div class="time-wheels">
+              <div class="time-wheel" id="hourWheel" role="listbox" aria-label="Hora"></div>
+              <span class="time-sep" aria-hidden="true">:</span>
+              <div class="time-wheel" id="minuteWheel" role="listbox" aria-label="Minutos"></div>
+            </div>
+            <div class="time-quick">
+              <button type="button" data-time="08:00">08:00</button>
+              <button type="button" data-time="09:00">09:00</button>
+              <button type="button" data-time="12:00">12:00</button>
+              <button type="button" data-time="15:00">15:00</button>
+              <button type="button" data-time="18:00">18:00</button>
+              <button type="button" data-time="20:00">20:00</button>
+            </div>
+            <div class="time-actions">
+              <button type="button" id="timeClear" class="btn-secondary">Quitar</button>
+              <button type="button" id="timeConfirm" class="btn-primary">Listo</button>
+            </div>
+          </div>
+          <input type="hidden" id="taskTime" />
+        </div>
         <button type="submit" class="add-btn">Agregar</button>
       </div>
       <p id="micHint" class="mic-hint" aria-live="polite"></p>
