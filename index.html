@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Lugardo To Do List</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="app-header">
+    <h1 class="app-title">Lugardo <span class="accent">To Do List</span></h1>
+    <p class="app-subtitle">Organiza tus tareas día a día</p>
+  </header>
+
+  <main class="app-main">
+    <section class="calendar-section" aria-label="Calendario">
+      <div class="calendar-toolbar">
+        <button id="prevMonth" class="nav-btn" aria-label="Mes anterior">&larr;</button>
+        <h2 id="monthLabel" class="month-label"></h2>
+        <button id="nextMonth" class="nav-btn" aria-label="Mes siguiente">&rarr;</button>
+        <button id="todayBtn" class="today-btn" aria-label="Ir a hoy">Hoy</button>
+      </div>
+
+      <div class="filter-bar">
+        <label class="filter-label">Filtrar:</label>
+        <select id="statusFilter" class="filter-select" aria-label="Filtrar por estado">
+          <option value="all">Todos los estados</option>
+          <option value="pendiente">Pendiente</option>
+          <option value="en-proceso">En proceso</option>
+          <option value="completado">Completado</option>
+          <option value="cancelado">Cancelado</option>
+          <option value="pospuesto">Pospuesto</option>
+        </select>
+      </div>
+
+      <div class="weekdays" aria-hidden="true">
+        <div>Lun</div><div>Mar</div><div>Mié</div><div>Jue</div><div>Vie</div><div>Sáb</div><div>Dom</div>
+      </div>
+      <div id="calendarGrid" class="calendar-grid" role="grid"></div>
+
+      <div class="legend">
+        <span class="legend-item"><span class="dot dot-pendiente"></span>Pendiente</span>
+        <span class="legend-item"><span class="dot dot-en-proceso"></span>En proceso</span>
+        <span class="legend-item"><span class="dot dot-completado"></span>Completado</span>
+        <span class="legend-item"><span class="dot dot-cancelado"></span>Cancelado</span>
+        <span class="legend-item"><span class="dot dot-pospuesto"></span>Pospuesto</span>
+      </div>
+    </section>
+  </main>
+
+  <aside id="taskPanel" class="task-panel" aria-hidden="true">
+    <div class="panel-header">
+      <div>
+        <h3 id="panelDate" class="panel-date"></h3>
+        <p id="panelSummary" class="panel-summary"></p>
+      </div>
+      <button id="closePanel" class="close-btn" aria-label="Cerrar panel">&times;</button>
+    </div>
+
+    <form id="taskForm" class="task-form">
+      <input
+        type="text"
+        id="taskInput"
+        class="task-input"
+        placeholder="Nueva tarea…"
+        maxlength="140"
+        required
+      />
+      <input type="time" id="taskTime" class="task-time" aria-label="Hora (opcional)" />
+      <button type="submit" class="add-btn">Agregar</button>
+    </form>
+
+    <ul id="taskList" class="task-list"></ul>
+    <p id="emptyState" class="empty-state">No hay tareas para este día.</p>
+  </aside>
+
+  <div id="backdrop" class="backdrop" aria-hidden="true"></div>
+
+  <div id="moveModal" class="move-modal" aria-hidden="true">
+    <div class="move-modal-content">
+      <h4>Mover tarea pospuesta</h4>
+      <p id="moveTaskName" class="move-task-name"></p>
+      <label for="moveDateInput">Nueva fecha:</label>
+      <input type="date" id="moveDateInput" />
+      <div class="move-modal-actions">
+        <button id="cancelMove" class="btn-secondary">Cancelar</button>
+        <button id="confirmMove" class="btn-primary">Mover</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
